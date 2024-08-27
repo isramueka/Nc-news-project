@@ -5,11 +5,7 @@ const getTopics = (req, res, next) => {
     .then((topics) => {
       res.status(200).send({ topics });
     })
-    .catch((err) => {
-      if (err) {
-        res.status(500).send({ msg: "Internal Server Error" });
-      }
-    });
+    .catch(next);
 };
 
 module.exports = { getTopics };

@@ -25,3 +25,17 @@ describe("/api/topics", () => {
       });
   });
 });
+
+describe("/api", () => {
+  test("GET: 200 responds with an object describing all available endpoints", () => {
+    return request(app)
+      .get("/api")
+      .expect(200)
+      .then((response) => {
+        const endpoints = response.body.endpoints;
+        expect(endpoints).toHaveProperty("GET /api");
+        expect(endpoints).toHaveProperty("GET /api/topics");
+        expect(endpoints).toHaveProperty("GET /api/articles");
+      });
+  });
+});
