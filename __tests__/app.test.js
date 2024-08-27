@@ -59,3 +59,37 @@ describe("/api", () => {
       });
   });
 });
+
+describe("/api/articles/:article_id", () => {
+  test("GET: 200 responds with an article object including article_img_url", () => {
+    return request(app)
+      .get("/api/articles/1")
+      .expect(200)
+      .then((response) => {
+        const article = response.body.article;
+        expect(article).toMatchObject({
+          author: expect.any(String),
+          title: expect.any(String),
+          article_id: expect.any(Number),
+          body: expect.any(String),
+          topic: expect.any(String),
+          created_at: expect.any(String),
+          votes: expect.any(Number),
+          article_img_url: expect.any(String),
+        });
+        // Additional check for the image URL using Regex
+        expect(article.article_img_url).toMatch(
+          /^https:\/\/images\.pexels\.com\/photos\/\d+/
+        );
+      });
+  });
+
+  test("GET: 404 responds with an error message for non-existent article", () => {
+    return request(app)
+      .get("/api/articles/999999")
+      .expect(404)
+      .then((response) => {
+        expect(response.body.msg).toBe("Article Not Found");
+      });
+  });
+});
