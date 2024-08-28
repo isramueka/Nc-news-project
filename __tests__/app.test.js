@@ -6,6 +6,7 @@ const articleData = require("../db/data/test-data/articles");
 const commentData = require("../db/data/test-data/comments");
 const topicData = require("../db/data/test-data/topics");
 const userData = require("../db/data/test-data/users");
+const endpointsJSON = require("../endpoints.json");
 
 beforeEach(() => seed({ articleData, commentData, topicData, userData }));
 afterAll(() => db.end());
@@ -31,31 +32,15 @@ describe("/api/topics", () => {
   });
 });
 
+// Refactor of the Test as Requested in (PR#2)
 describe("/api", () => {
   test("GET: 200 responds with an object describing all available endpoints", () => {
     return request(app)
       .get("/api")
       .expect(200)
       .then((response) => {
-        const endpoints = response.body.endpoints;
-        // Check if the endpoints object contains all expected keys
-        expect(endpoints).toMatchObject({
-          "GET /api": expect.objectContaining({
-            description: expect.any(String),
-          }),
-          "GET /api/topics": expect.objectContaining({
-            description: expect.any(String),
-            queries: expect.any(Array),
-            exampleResponse: expect.any(Object),
-          }),
-          "GET /api/articles": expect.objectContaining({
-            description: expect.any(String),
-            queries: expect.any(Array),
-            exampleResponse: expect.any(Object),
-          }),
-        });
-        // Ensure there are keys in the endpoints object
-        expect(Object.keys(endpoints).length).toBeGreaterThan(0);
+        const responseEndpoints = response.body.endpoints;
+        expect(responseEndpoints).toEqual(endpointsJSON);
       });
   });
 });
@@ -68,19 +53,16 @@ describe("/api/articles/:article_id", () => {
       .then((response) => {
         const article = response.body.article;
         expect(article).toMatchObject({
-          author: expect.any(String),
-          title: expect.any(String),
-          article_id: expect.any(Number),
-          body: expect.any(String),
-          topic: expect.any(String),
-          created_at: expect.any(String),
-          votes: expect.any(Number),
-          article_img_url: expect.any(String),
+          author: "butter_bridge",
+          title: "Living in the shadow of a great man",
+          article_id: 1,
+          body: "I find this existence challenging",
+          topic: "mitch",
+          created_at: "2020-07-09T20:11:00.000Z",
+          votes: 100,
+          article_img_url:
+            "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
         });
-        // Additional check for the image URL using Regex
-        expect(article.article_img_url).toMatch(
-          /^https:\/\/images\.pexels\.com\/photos\/\d+/
-        );
       });
   });
 
@@ -90,6 +72,33 @@ describe("/api/articles/:article_id", () => {
       .expect(404)
       .then((response) => {
         expect(response.body.msg).toBe("Article Not Found");
+      });
+  });
+});
+
+describe("/api/articles", () => {
+  test("GET: 200 responds with all an array of articles", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then((response) => {
+        const articles = response.body.articles;
+        expect(Array.isArray(articles)).toBe(true);
+        articles.forEach((article) => {
+          expect(article).toEqual(
+            expect.objectContaining({
+              author: expect.any(String),
+              title: expect.any(String),
+              article_id: expect.any(Number),
+              topic: expect.any(String),
+              created_at: expect.any(String),
+              votes: expect.any(Number),
+              article_img_url: expect.any(String),
+              comments_count: expect.any(Number),
+            })
+          );
+          expect(article).not.toHaveProperty("body");
+        });
       });
   });
 });
