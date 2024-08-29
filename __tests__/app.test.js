@@ -148,3 +148,53 @@ describe("/api/articles/:article_id/comments", () => {
       });
   });
 });
+
+describe("/api/articles/:article_id/comments", () => {
+  test("POST: 201 responds with the posted comment", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({ username: "butter_bridge", body: "Great article!" })
+      .expect(201)
+      .then((response) => {
+        const comment = response.body.comment;
+        expect(comment).toMatchObject({
+          comment_id: expect.any(Number),
+          article_id: 1,
+          author: "butter_bridge",
+          body: "Great article!",
+          created_at: expect.any(String),
+          votes: expect.any(Number),
+        });
+      });
+  });
+
+  test("POST: 400 responds with an error message for missing fields", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({ body: "Great article!" })
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe("Missing required fields");
+      });
+  });
+
+  test("POST: 404 responds with an error message for non-existent article_id", () => {
+    return request(app)
+      .post("/api/articles/999999/comments")
+      .send({ username: "butter_bridge", body: "Great article!" })
+      .expect(404)
+      .then((response) => {
+        expect(response.body.msg).toBe("Article not found for id: 999999");
+      });
+  });
+
+  test("POST: 400 responds with an error message for invalid article_id", () => {
+    return request(app)
+      .post("/api/articles/invalidID/comments")
+      .send({ username: "butter_bridge", body: "Great article!" })
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe("Invalid input");
+      });
+  });
+});
