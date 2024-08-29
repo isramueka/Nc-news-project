@@ -6,6 +6,7 @@ const {
   getArticles,
   getCommentsByArticle,
   postCommentForArticle,
+  patchVotesForArticle,
 } = require("./controllers/articles.controllers");
 const app = express();
 
@@ -23,6 +24,8 @@ app.get("/api/articles/:article_id/comments", getCommentsByArticle);
 
 app.post("/api/articles/:article_id/comments", postCommentForArticle);
 
+app.patch("/api/articles/:article_id", patchVotesForArticle);
+
 // Refactored Middleware to handle custom errors as requested in (PR#4)
 app.use((err, req, res, next) => {
   if (err.status && err.msg) {
@@ -31,21 +34,20 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
+// Refactor (PR#5) for consolidated error handler for custom and validation errors
 app.use((err, req, res, next) => {
-  if (err.code === "22P02") {
+  if (err.status && err.msg) {
+    return res.status(err.status).send({ msg: err.msg });
+  } else if (err.code === "22P02") {
     return res.status(400).send({ msg: "Invalid input" });
   }
   next(err);
 });
 
-//Refactor of err truthy, as it can handle any error
+// Catch-all error handler for unexpected errors
 app.use((err, req, res, next) => {
-  if (err.status) {
-    res.status(err.status).send({ msg: err.msg });
-  } else {
-    console.error(err);
-    res.status(500).send({ msg: "Internal Server Error" });
-  }
+  console.error(err);
+  res.status(500).send({ msg: "Internal Server Error" });
 });
 
 module.exports = app;

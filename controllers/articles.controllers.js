@@ -3,6 +3,7 @@ const {
   fetchArticles,
   fetchCommentsByArticle,
   postComment,
+  updateVotesForArticle,
 } = require("../models/articles.models");
 
 const getArticleById = (req, res, next) => {
@@ -40,12 +41,29 @@ const getCommentsByArticle = (req, res, next) => {
 const postCommentForArticle = (req, res, next) => {
   const { article_id } = req.params;
   const { username, body } = req.body;
-  if (!username || !body) {
-    return next({ status: 400, msg: "Missing required fields" });
-  }
   postComment(article_id, username, body)
     .then((comment) => {
       res.status(201).send({ comment });
+    })
+    .catch((err) => {
+      next(err);
+    });
+};
+
+const patchVotesForArticle = (req, res, next) => {
+  const { article_id } = req.params;
+  const { upd_votes } = req.body;
+
+  if (typeof upd_votes !== "number") {
+    return next({
+      status: 400,
+      msg: "Invalid input: 'upd_votes' must be a number",
+    });
+  }
+
+  updateVotesForArticle(article_id, upd_votes)
+    .then((article) => {
+      res.status(200).send({ article });
     })
     .catch((err) => {
       next(err);
@@ -57,4 +75,5 @@ module.exports = {
   getArticles,
   getCommentsByArticle,
   postCommentForArticle,
+  patchVotesForArticle,
 };

@@ -139,6 +139,27 @@ describe("/api/articles/:article_id/comments", () => {
       });
   });
 
+  // Added test for no comments article as requested (PR#5)
+  test("GET: 200 responds with an empty array when an article has no comments", () => {
+    return request(app)
+      .get("/api/articles/2/comments")
+      .expect(200)
+      .then((response) => {
+        expect(Array.isArray(response.body.comments)).toBe(true);
+        expect(response.body.comments).toHaveLength(0);
+      });
+  });
+
+  // Added test for invalidID requested (PR#5)
+  test("GET: 400 responds with an error message for invalid article ID datatype", () => {
+    return request(app)
+      .get("/api/articles/invalidID/comments")
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe("Invalid input");
+      });
+  });
+
   test("GET: 404 responds with an error message for non-existent article_id", () => {
     return request(app)
       .get("/api/articles/999999/comments")
@@ -168,23 +189,35 @@ describe("/api/articles/:article_id/comments", () => {
       });
   });
 
+  // Added new property as requested on (PR#6)
+  test("POST: 201 responds with the posted comment while ignoring unnecessary properties", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({
+        username: "butter_bridge",
+        body: "Another comment.",
+        randomProperty: "should be ignored",
+      })
+      .expect(201)
+      .then(({ body }) => {
+        const comment = body.comment;
+        expect(comment).toHaveProperty("comment_id");
+        expect(comment).toHaveProperty("author", "butter_bridge");
+        expect(comment).toHaveProperty("body", "Another comment.");
+        // Ensure it is ignored
+        expect(comment).not.toHaveProperty("randomProperty");
+      });
+  });
+
   test("POST: 400 responds with an error message for missing fields", () => {
     return request(app)
       .post("/api/articles/1/comments")
       .send({ body: "Great article!" })
       .expect(400)
       .then((response) => {
-        expect(response.body.msg).toBe("Missing required fields");
-      });
-  });
-
-  test("POST: 404 responds with an error message for non-existent article_id", () => {
-    return request(app)
-      .post("/api/articles/999999/comments")
-      .send({ username: "butter_bridge", body: "Great article!" })
-      .expect(404)
-      .then((response) => {
-        expect(response.body.msg).toBe("Article not found for id: 999999");
+        expect(response.body.msg).toBe(
+          "Missing required fields: username and body"
+        );
       });
   });
 
@@ -195,6 +228,91 @@ describe("/api/articles/:article_id/comments", () => {
       .expect(400)
       .then((response) => {
         expect(response.body.msg).toBe("Invalid input");
+      });
+  });
+});
+
+test("POST: 404 responds with an error message for non-existent article_id", () => {
+  return request(app)
+    .post("/api/articles/999999/comments")
+    .send({ username: "butter_bridge", body: "Great article!" })
+    .expect(404)
+    .then((response) => {
+      expect(response.body.msg).toBe("Article not found for id: 999999");
+    });
+});
+
+test("POST: 404 responds with an error when username does not exist", () => {
+  return request(app)
+    .post("/api/articles/1/comments")
+    .send({
+      username: "not_a_user",
+      body: "This comment will not be accepted.",
+    })
+    .expect(404)
+    .then(({ body }) => {
+      expect(body.msg).toBe("Username not found");
+    });
+});
+
+describe("PATCH /api/articles/:article_id", () => {
+  test("PATCH: 200 responds with the updated article", () => {
+    // Check how many votes there are to expect 1 more
+    return request(app)
+      .get("/api/articles/1")
+      .then((res) => {
+        const initialVotes = res.body.article.votes;
+        return request(app)
+          .patch("/api/articles/1")
+          .send({ upd_votes: 1 })
+          .expect(200)
+          .then((response) => {
+            expect(response.body.article.votes).toBe(initialVotes + 1);
+          });
+      });
+  });
+
+  test("PATCH: 400 responds with an error message for invalid 'upd_votes'", () => {
+    return request(app)
+      .patch("/api/articles/1")
+      .send({ upd_votes: "string" })
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe(
+          "Invalid input: 'upd_votes' must be a number"
+        );
+      });
+  });
+
+  test("PATCH: 400 responds with an error message for invalid article_id", () => {
+    return request(app)
+      .patch("/api/articles/invalidID")
+      .send({ upd_votes: 1 })
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe("Invalid input");
+      });
+  });
+
+  test("PATCH: 404 responds with an error message for non-existent article_id", () => {
+    return request(app)
+      .patch("/api/articles/999999")
+      .send({ upd_votes: 1 })
+      .expect(404)
+      .then((response) => {
+        expect(response.body.msg).toBe("Article Not Found");
+      });
+  });
+
+  test("PATCH: 400 responds with an error message for missing 'upd_votes'", () => {
+    return request(app)
+      .patch("/api/articles/1")
+      .send({})
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe(
+          "Invalid input: 'upd_votes' must be a number"
+        );
       });
   });
 });
