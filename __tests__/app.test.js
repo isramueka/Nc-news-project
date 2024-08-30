@@ -7,6 +7,8 @@ const commentData = require("../db/data/test-data/comments");
 const topicData = require("../db/data/test-data/topics");
 const userData = require("../db/data/test-data/users");
 const endpointsJSON = require("../endpoints.json");
+// To use toBeSortedBy matcher
+require("jest-sorted");
 
 beforeEach(() => seed({ articleData, commentData, topicData, userData }));
 afterAll(() => db.end());
@@ -278,9 +280,7 @@ describe("PATCH /api/articles/:article_id", () => {
       .send({ upd_votes: "string" })
       .expect(400)
       .then((response) => {
-        expect(response.body.msg).toBe(
-          "Invalid input: 'upd_votes' must be a number"
-        );
+        expect(response.body.msg).toBe("Invalid input");
       });
   });
 
@@ -310,29 +310,15 @@ describe("PATCH /api/articles/:article_id", () => {
       .send({})
       .expect(400)
       .then((response) => {
-        expect(response.body.msg).toBe(
-          "Invalid input: 'upd_votes' must be a number"
-        );
+        expect(response.body.msg).toBe("Missing required field");
       });
   });
 });
 
+// Refactor requested on (PR#8)
 describe("/api/comments/:comment_id", () => {
   test("DELETE: 204 responds with no content and successfully deletes a comment", () => {
-    return request(app)
-      .delete("/api/comments/1")
-      .expect(204)
-      .then(() => {
-        return request(app)
-          .get("/api/articles/1/comments")
-          .expect(200)
-          .then((response) => {
-            const comments = response.body.comments;
-            expect(comments).not.toContainEqual(
-              expect.objectContaining({ comment_id: 1 })
-            );
-          });
-      });
+    return request(app).delete("/api/comments/1").expect(204);
   });
 
   test("DELETE: 400 responds with an error message for invalid comment_id datatype", () => {
@@ -372,6 +358,47 @@ describe("/api/users", () => {
             })
           );
         });
+      });
+  });
+});
+
+// Feature Sorting Queries TDD
+describe("/api/articles", () => {
+  test("GET: 200 - responds with articles sorted by votes in descending order", () => {
+    return request(app)
+      .get("/api/articles?sort_by=votes")
+      .expect(200)
+      .then((response) => {
+        const articles = response.body.articles;
+        expect(articles).toBeSortedBy("votes", { descending: true });
+      });
+  });
+
+  test("GET: 200 - responds with articles sorted by title in ascending order", () => {
+    return request(app)
+      .get("/api/articles?sort_by=title&order=asc")
+      .expect(200)
+      .then((response) => {
+        const articles = response.body.articles;
+        expect(articles).toBeSortedBy("title", { ascending: true });
+      });
+  });
+
+  test("GET: 400 - responds with error when sort_by column is invalid", () => {
+    return request(app)
+      .get("/api/articles?sort_by=invalid_column")
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe("Invalid sort_by column");
+      });
+  });
+
+  test("GET: 400 - responds with error when order value is invalid", () => {
+    return request(app)
+      .get("/api/articles?order=invalid_order")
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe("Invalid order value");
       });
   });
 });

@@ -2,6 +2,11 @@
 
 This project is a backend API for accessing application data programmatically, intended to mimic the building of a real world backend service (such as Reddit) which should provide this information to the front end architecture.
 
+This project is hosted at:
+https://nc-news-project-fd36.onrender.com/
+
+Remember to add the /api/endpoints to check any of the available!
+
 ## Setup Instructions
 
 To run this project locally, follow these steps:
