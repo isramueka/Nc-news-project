@@ -8,6 +8,7 @@ const {
   postCommentForArticle,
   patchVotesForArticle,
 } = require("./controllers/articles.controllers");
+const { deleteComment } = require("./controllers/comments.controllers");
 const app = express();
 
 app.use(express.json());
@@ -26,13 +27,7 @@ app.post("/api/articles/:article_id/comments", postCommentForArticle);
 
 app.patch("/api/articles/:article_id", patchVotesForArticle);
 
-// Refactored Middleware to handle custom errors as requested in (PR#4)
-app.use((err, req, res, next) => {
-  if (err.status && err.msg) {
-    return res.status(err.status).send({ msg: err.msg });
-  }
-  next(err);
-});
+app.delete("/api/comments/:comment_id", deleteComment);
 
 // Refactor (PR#5) for consolidated error handler for custom and validation errors
 app.use((err, req, res, next) => {

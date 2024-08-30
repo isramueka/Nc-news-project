@@ -316,3 +316,40 @@ describe("PATCH /api/articles/:article_id", () => {
       });
   });
 });
+
+describe("/api/comments/:comment_id", () => {
+  test("DELETE: 204 responds with no content and successfully deletes a comment", () => {
+    return request(app)
+      .delete("/api/comments/1")
+      .expect(204)
+      .then(() => {
+        return request(app)
+          .get("/api/articles/1/comments")
+          .expect(200)
+          .then((response) => {
+            const comments = response.body.comments;
+            expect(comments).not.toContainEqual(
+              expect.objectContaining({ comment_id: 1 })
+            );
+          });
+      });
+  });
+
+  test("DELETE: 400 responds with an error message for invalid comment_id datatype", () => {
+    return request(app)
+      .delete("/api/comments/invalidID")
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe("Invalid input");
+      });
+  });
+
+  test("DELETE: 404 responds with an error message for non-existent comment_id", () => {
+    return request(app)
+      .delete("/api/comments/999999")
+      .expect(404)
+      .then((response) => {
+        expect(response.body.msg).toBe("Comment Not Found");
+      });
+  });
+});
