@@ -402,3 +402,28 @@ describe("/api/articles", () => {
       });
   });
 });
+
+describe("/api/articles", () => {
+  test("GET: 200 responds with articles filtered by topic", () => {
+    return request(app)
+      .get("/api/articles?topic=mitch")
+      .expect(200)
+      .then((response) => {
+        const articles = response.body.articles;
+        expect(Array.isArray(articles)).toBe(true);
+        expect(articles.length).toBeGreaterThan(0);
+        articles.forEach((article) => {
+          expect(article.topic).toBe("mitch");
+        });
+      });
+  });
+
+  test("GET: 400 responds with an error message for an invalid topic query", () => {
+    return request(app)
+      .get("/api/articles?topic=notTopic")
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe("Invalid topic value");
+      });
+  });
+});
