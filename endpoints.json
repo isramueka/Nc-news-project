@@ -92,5 +92,17 @@
       "status": 204,
       "message": "No Content"
     }
+  },
+  "GET /api/users": {
+    "description": "serves an array of all users",
+    "exampleResponse": {
+      "users": [
+        {
+          "username": "weegembump",
+          "name": "Gemma Bump",
+          "avatar_url": "https://example.com/avatar1.jpg"
+        }
+      ]
+    }
   }
 }

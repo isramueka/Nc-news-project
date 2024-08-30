@@ -9,6 +9,7 @@ const {
   patchVotesForArticle,
 } = require("./controllers/articles.controllers");
 const { deleteComment } = require("./controllers/comments.controllers");
+const { getUsers } = require("./controllers/users.controllers");
 const app = express();
 
 app.use(express.json());
@@ -28,6 +29,8 @@ app.post("/api/articles/:article_id/comments", postCommentForArticle);
 app.patch("/api/articles/:article_id", patchVotesForArticle);
 
 app.delete("/api/comments/:comment_id", deleteComment);
+
+app.get("/api/users", getUsers);
 
 // Refactor (PR#5) for consolidated error handler for custom and validation errors
 app.use((err, req, res, next) => {
