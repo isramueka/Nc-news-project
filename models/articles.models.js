@@ -14,7 +14,30 @@ const fetchArticleById = (article_id) => {
     });
 };
 
-const fetchArticles = () => {
+const fetchArticles = (sort_by = "created_at", order = "desc") => {
+  const validSortColumns = [
+    "title",
+    "author",
+    "created_at",
+    "votes",
+    "article_id",
+    "comments_count",
+  ];
+  const validOrderValues = ["asc", "desc"];
+  // Validate sort_by
+  if (!validSortColumns.includes(sort_by)) {
+    return Promise.reject({
+      status: 400,
+      msg: "Invalid sort_by column",
+    });
+  }
+  // Validate order
+  if (!validOrderValues.includes(order)) {
+    return Promise.reject({
+      status: 400,
+      msg: "Invalid order value",
+    });
+  }
   // Exclude Body property not selecting *, LEFT JOIN to select articles with no comments. Use ::integer to not have a String as a COUNT
   return db
     .query(
@@ -23,7 +46,7 @@ const fetchArticles = () => {
   FROM articles
   LEFT JOIN comments ON comments.article_id = articles.article_id
   GROUP BY articles.article_id
-  ORDER BY articles.created_at DESC`
+  ORDER BY ${sort_by} ${order}`
     )
     .then(({ rows }) => {
       return rows;

@@ -12,7 +12,6 @@ const deleteCommentById = (comment_id) => {
           msg: "Comment Not Found",
         });
       }
-      return rows[0];
     });
 };
 

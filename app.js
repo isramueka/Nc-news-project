@@ -35,16 +35,19 @@ app.get("/api/users", getUsers);
 // Refactor (PR#5) for consolidated error handler for custom and validation errors
 app.use((err, req, res, next) => {
   if (err.status && err.msg) {
+    console.log(err);
     return res.status(err.status).send({ msg: err.msg });
   } else if (err.code === "22P02") {
     return res.status(400).send({ msg: "Invalid input" });
+  } else if (err.code === "23502") {
+    return res.status(400).send({ msg: "Missing required field" });
   }
   next(err);
 });
 
 // Catch-all error handler for unexpected errors
 app.use((err, req, res, next) => {
-  console.error(err);
+  console.log(err);
   res.status(500).send({ msg: "Internal Server Error" });
 });
 

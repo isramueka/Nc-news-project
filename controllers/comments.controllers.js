@@ -4,7 +4,7 @@ const deleteComment = (req, res, next) => {
   const { comment_id } = req.params;
   deleteCommentById(comment_id)
     .then(() => {
-      res.status(204).send();
+      res.sendStatus(204);
     })
     .catch((err) => {
       next(err);

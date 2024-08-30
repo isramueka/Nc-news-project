@@ -18,7 +18,8 @@ const getArticleById = (req, res, next) => {
 };
 
 const getArticles = (req, res, next) => {
-  fetchArticles()
+  const { sort_by, order } = req.query;
+  fetchArticles(sort_by, order)
     .then((articles) => {
       res.status(200).send({ articles });
     })
@@ -53,14 +54,6 @@ const postCommentForArticle = (req, res, next) => {
 const patchVotesForArticle = (req, res, next) => {
   const { article_id } = req.params;
   const { upd_votes } = req.body;
-
-  if (typeof upd_votes !== "number") {
-    return next({
-      status: 400,
-      msg: "Invalid input: 'upd_votes' must be a number",
-    });
-  }
-
   updateVotesForArticle(article_id, upd_votes)
     .then((article) => {
       res.status(200).send({ article });
