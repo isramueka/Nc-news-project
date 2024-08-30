@@ -1,38 +1,20 @@
 const express = require("express");
-const { getTopics } = require("./controllers/topics.controllers");
-const { getApi } = require("./controllers/api.controllers");
-const {
-  getArticleById,
-  getArticles,
-  getCommentsByArticle,
-  postCommentForArticle,
-  patchVotesForArticle,
-} = require("./controllers/articles.controllers");
-const { deleteComment } = require("./controllers/comments.controllers");
-const { getUsers } = require("./controllers/users.controllers");
+const apiRouter = require("./routes/api.router");
+const topicsRouter = require("./routes/topics.router");
+const articlesRouter = require("./routes/articles.router");
+const commentsRouter = require("./routes/comments.router");
+const usersRouter = require("./routes/users.router");
 const app = express();
 
 app.use(express.json());
 
-app.get("/api", getApi);
+// Use of Router to get routes
+app.use("/api", apiRouter);
+app.use("/api/topics", topicsRouter);
+app.use("/api/articles", articlesRouter);
+app.use("/api/comments", commentsRouter);
+app.use("/api/users", usersRouter);
 
-app.get("/api/topics", getTopics);
-
-app.get("/api/articles", getArticles);
-
-app.get("/api/articles/:article_id", getArticleById);
-
-app.get("/api/articles/:article_id/comments", getCommentsByArticle);
-
-app.post("/api/articles/:article_id/comments", postCommentForArticle);
-
-app.patch("/api/articles/:article_id", patchVotesForArticle);
-
-app.delete("/api/comments/:comment_id", deleteComment);
-
-app.get("/api/users", getUsers);
-
-// Refactor (PR#5) for consolidated error handler for custom and validation errors
 app.use((err, req, res, next) => {
   if (err.status && err.msg) {
     console.log(err);
@@ -45,7 +27,6 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// Catch-all error handler for unexpected errors
 app.use((err, req, res, next) => {
   console.log(err);
   res.status(500).send({ msg: "Internal Server Error" });
