@@ -65,6 +65,8 @@ describe("/api/articles/:article_id", () => {
           votes: 100,
           article_img_url:
             "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+          // Updated test case to ensure new feature count comments for :article_id endpoint
+          comments_count: expect.any(Number),
         });
       });
   });
