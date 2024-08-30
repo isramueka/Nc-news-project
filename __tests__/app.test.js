@@ -420,10 +420,20 @@ describe("/api/articles", () => {
       });
   });
 
-  test("GET: 400 responds with an error message for an invalid topic query", () => {
+  test("GET: 200 responds with an empty array if a valid topic exists but has no associated articles", () => {
+    return request(app)
+      .get("/api/articles?topic=paper")
+      .expect(200)
+      .then((response) => {
+        const articles = response.body.articles;
+        expect(articles).toEqual([]);
+      });
+  });
+
+  test("GET: 404 responds with an error message for an invalid topic query", () => {
     return request(app)
       .get("/api/articles?topic=notTopic")
-      .expect(400)
+      .expect(404)
       .then((response) => {
         expect(response.body.msg).toBe("Invalid topic value");
       });

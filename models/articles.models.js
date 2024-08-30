@@ -1,4 +1,5 @@
 const db = require("../db/connection");
+const { fetchValidTopics } = require("./topics.models");
 
 const fetchArticleById = (article_id) => {
   return db
@@ -33,7 +34,6 @@ const fetchArticles = (sort_by = "created_at", order = "desc", topic) => {
     "comments_count",
   ];
   const validOrderValues = ["asc", "desc"];
-  const validTopics = ["mitch", "cats", "paper"];
   // Validate sort_by
   if (!validSortColumns.includes(sort_by)) {
     return Promise.reject({
@@ -48,32 +48,31 @@ const fetchArticles = (sort_by = "created_at", order = "desc", topic) => {
       msg: "Invalid order value",
     });
   }
-  // Validate topics
-  if (topic && !validTopics.includes(topic)) {
-    return Promise.reject({
-      status: 400,
-      msg: "Invalid topic value",
-    });
-  }
-  // Build the SQL query with optional topic filter
-  let queryStr = `
+  return fetchValidTopics().then((validTopics) => {
+    if (topic && !validTopics.includes(topic)) {
+      return Promise.reject({ status: 404, msg: "Invalid topic value" });
+    }
+
+    // Build the SQL query with optional topic filter
+    let queryStr = `
     SELECT articles.author, articles.title, articles.article_id, articles.topic, articles.created_at, articles.votes, articles.article_img_url,
     COUNT(comments.comment_id)::integer AS comments_count
     FROM articles
     LEFT JOIN comments ON comments.article_id = articles.article_id
   `;
 
-  const queryParams = [];
+    const queryParams = [];
 
-  if (topic) {
-    queryStr += ` WHERE articles.topic = $1`;
-    queryParams.push(topic);
-  }
+    if (topic) {
+      queryStr += ` WHERE articles.topic = $1`;
+      queryParams.push(topic);
+    }
 
-  queryStr += ` GROUP BY articles.article_id ORDER BY ${sort_by} ${order}`;
+    queryStr += ` GROUP BY articles.article_id ORDER BY ${sort_by} ${order}`;
 
-  return db.query(queryStr, queryParams).then(({ rows }) => {
-    return rows;
+    return db.query(queryStr, queryParams).then(({ rows }) => {
+      return rows;
+    });
   });
 };
 
