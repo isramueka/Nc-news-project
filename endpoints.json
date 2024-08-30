@@ -105,5 +105,15 @@
         }
       ]
     }
+  },
+  "GET /api/users/:username": {
+    "description": "serves a user by their username",
+    "exampleResponse": {
+      "user": {
+        "username": "weegembump",
+        "name": "Gemma Bump",
+        "avatar_url": "https://example.com/avatar1.jpg"
+      }
+    }
   }
 }

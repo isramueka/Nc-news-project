@@ -7,7 +7,6 @@ const commentData = require("../db/data/test-data/comments");
 const topicData = require("../db/data/test-data/topics");
 const userData = require("../db/data/test-data/users");
 const endpointsJSON = require("../endpoints.json");
-// To use toBeSortedBy matcher
 require("jest-sorted");
 
 beforeEach(() => seed({ articleData, commentData, topicData, userData }));
@@ -21,10 +20,8 @@ describe("/api/topics", () => {
       .then((response) => {
         const topicsArray = response.body.topics;
         expect(Array.isArray(topicsArray)).toBe(true);
-        // Ensuring topicsArray is not empty for handling false positive
         expect(topicsArray.length).toBeGreaterThan(0);
         topicsArray.forEach((topic) => {
-          // Use MatchObject instead toHaveProperty
           expect(topic).toMatchObject({
             slug: expect.any(String),
             description: expect.any(String),
@@ -34,7 +31,6 @@ describe("/api/topics", () => {
   });
 });
 
-// Refactor of the Test as Requested in (PR#2)
 describe("/api", () => {
   test("GET: 200 responds with an object describing all available endpoints", () => {
     return request(app)
@@ -47,7 +43,6 @@ describe("/api", () => {
   });
 });
 
-// Refactor of the (PR#3) as we now the actual result
 describe("/api/articles/:article_id", () => {
   test("GET: 200 responds with an article object including article_img_url", () => {
     return request(app)
@@ -65,13 +60,11 @@ describe("/api/articles/:article_id", () => {
           votes: 100,
           article_img_url:
             "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
-          // Updated test case to ensure new feature count comments for :article_id endpoint
           comments_count: expect.any(Number),
         });
       });
   });
 
-  // Add test for invalidID
   test("GET: 400 responds with an error message for invalid article ID", () => {
     return request(app)
       .get("/api/articles/invalidID")
@@ -91,7 +84,6 @@ describe("/api/articles/:article_id", () => {
   });
 });
 
-// Add check of length as requested in (PR#4)
 describe("/api/articles", () => {
   test("GET: 200 responds with all an array of articles", () => {
     return request(app)
@@ -143,7 +135,6 @@ describe("/api/articles/:article_id/comments", () => {
       });
   });
 
-  // Added test for no comments article as requested (PR#5)
   test("GET: 200 responds with an empty array when an article has no comments", () => {
     return request(app)
       .get("/api/articles/2/comments")
@@ -154,7 +145,6 @@ describe("/api/articles/:article_id/comments", () => {
       });
   });
 
-  // Added test for invalidID requested (PR#5)
   test("GET: 400 responds with an error message for invalid article ID datatype", () => {
     return request(app)
       .get("/api/articles/invalidID/comments")
@@ -193,7 +183,6 @@ describe("/api/articles/:article_id/comments", () => {
       });
   });
 
-  // Added new property as requested on (PR#6)
   test("POST: 201 responds with the posted comment while ignoring unnecessary properties", () => {
     return request(app)
       .post("/api/articles/1/comments")
@@ -208,7 +197,6 @@ describe("/api/articles/:article_id/comments", () => {
         expect(comment).toHaveProperty("comment_id");
         expect(comment).toHaveProperty("author", "butter_bridge");
         expect(comment).toHaveProperty("body", "Another comment.");
-        // Ensure it is ignored
         expect(comment).not.toHaveProperty("randomProperty");
       });
   });
@@ -261,7 +249,6 @@ test("POST: 404 responds with an error when username does not exist", () => {
 
 describe("PATCH /api/articles/:article_id", () => {
   test("PATCH: 200 responds with the updated article", () => {
-    // Check how many votes there are to expect 1 more
     return request(app)
       .get("/api/articles/1")
       .then((res) => {
@@ -317,7 +304,6 @@ describe("PATCH /api/articles/:article_id", () => {
   });
 });
 
-// Refactor requested on (PR#8)
 describe("/api/comments/:comment_id", () => {
   test("DELETE: 204 responds with no content and successfully deletes a comment", () => {
     return request(app).delete("/api/comments/1").expect(204);
@@ -364,7 +350,6 @@ describe("/api/users", () => {
   });
 });
 
-// Feature Sorting Queries TDD
 describe("/api/articles", () => {
   test("GET: 200 - responds with articles sorted by votes in descending order", () => {
     return request(app)
@@ -436,6 +421,32 @@ describe("/api/articles", () => {
       .expect(404)
       .then((response) => {
         expect(response.body.msg).toBe("Invalid topic value");
+      });
+  });
+});
+
+describe("GET /api/users/:username", () => {
+  test("200: responds with the user object when the user exists", () => {
+    return request(app)
+      .get("/api/users/butter_bridge")
+      .expect(200)
+      .then((response) => {
+        const user = response.body.user;
+        expect(user).toEqual({
+          username: "butter_bridge",
+          name: "jonny",
+          avatar_url:
+            "https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg",
+        });
+      });
+  });
+
+  test("404: responds with an error when the user does not exist", () => {
+    return request(app)
+      .get("/api/users/nonexistentuser")
+      .expect(404)
+      .then((response) => {
+        expect(response.body.msg).toBe("User Not Found");
       });
   });
 });
