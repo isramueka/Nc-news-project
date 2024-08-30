@@ -14,7 +14,7 @@ const fetchArticleById = (article_id) => {
     });
 };
 
-const fetchArticles = (sort_by = "created_at", order = "desc") => {
+const fetchArticles = (sort_by = "created_at", order = "desc", topic) => {
   const validSortColumns = [
     "title",
     "author",
@@ -24,6 +24,7 @@ const fetchArticles = (sort_by = "created_at", order = "desc") => {
     "comments_count",
   ];
   const validOrderValues = ["asc", "desc"];
+  const validTopics = ["mitch", "cats", "paper"];
   // Validate sort_by
   if (!validSortColumns.includes(sort_by)) {
     return Promise.reject({
@@ -38,19 +39,33 @@ const fetchArticles = (sort_by = "created_at", order = "desc") => {
       msg: "Invalid order value",
     });
   }
-  // Exclude Body property not selecting *, LEFT JOIN to select articles with no comments. Use ::integer to not have a String as a COUNT
-  return db
-    .query(
-      `SELECT articles.author, articles.title, articles.article_id, articles.topic, articles.created_at, articles.votes, articles.article_img_url,
-  COUNT (comments.comment_id)::integer AS comments_count
-  FROM articles
-  LEFT JOIN comments ON comments.article_id = articles.article_id
-  GROUP BY articles.article_id
-  ORDER BY ${sort_by} ${order}`
-    )
-    .then(({ rows }) => {
-      return rows;
+  // Validate topics
+  if (topic && !validTopics.includes(topic)) {
+    return Promise.reject({
+      status: 400,
+      msg: "Invalid topic value",
     });
+  }
+  // Build the SQL query with optional topic filter
+  let queryStr = `
+    SELECT articles.author, articles.title, articles.article_id, articles.topic, articles.created_at, articles.votes, articles.article_img_url,
+    COUNT(comments.comment_id)::integer AS comments_count
+    FROM articles
+    LEFT JOIN comments ON comments.article_id = articles.article_id
+  `;
+
+  const queryParams = [];
+
+  if (topic) {
+    queryStr += ` WHERE articles.topic = $1`;
+    queryParams.push(topic);
+  }
+
+  queryStr += ` GROUP BY articles.article_id ORDER BY ${sort_by} ${order}`;
+
+  return db.query(queryStr, queryParams).then(({ rows }) => {
+    return rows;
+  });
 };
 
 const fetchCommentsByArticle = (article_id) => {
