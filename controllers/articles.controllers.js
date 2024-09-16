@@ -19,10 +19,11 @@ const getArticleById = (req, res, next) => {
 };
 
 const getArticles = (req, res, next) => {
-  const { sort_by, order, topic } = req.query;
-  fetchArticles(sort_by, order, topic)
-    .then((articles) => {
-      res.status(200).send({ articles });
+  const { sort_by, order, topic, limit = 10, p = 1 } = req.query;
+
+  fetchArticles(sort_by, order, topic, limit, p)
+    .then(({ articles, total_count }) => {
+      res.status(200).send({ articles, total_count });
     })
     .catch((err) => {
       next(err);
@@ -31,9 +32,10 @@ const getArticles = (req, res, next) => {
 
 const getCommentsByArticle = (req, res, next) => {
   const { article_id } = req.params;
-  fetchCommentsByArticle(article_id)
-    .then((comments) => {
-      res.status(200).send({ comments });
+  const { limit = 10, p = 1 } = req.query;
+  fetchCommentsByArticle(article_id, limit, p)
+    .then(({ comments, total_count }) => {
+      res.status(200).send({ comments, total_count });
     })
     .catch((err) => {
       next(err);

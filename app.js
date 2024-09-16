@@ -17,6 +17,7 @@ app.use("/api/comments", commentsRouter);
 app.use("/api/users", usersRouter);
 
 app.use((err, req, res, next) => {
+  console.error("Error details:", err);
   if (err.status && err.msg) {
     return res.status(err.status).send({ msg: err.msg });
   } else if (err.code === "22P02") {
