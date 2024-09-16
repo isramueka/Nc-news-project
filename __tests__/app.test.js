@@ -667,3 +667,44 @@ describe("GET /api/articles/:article_id/comments", () => {
     });
   });
 });
+
+describe("POST /api/topics", () => {
+  test("should create a new topic and return the topic object", () => {
+    const newTopic = {
+      slug: "new-topic",
+      description: "This is a new topic",
+    };
+    return request(app)
+      .post("/api/topics")
+      .send(newTopic)
+      .expect(201)
+      .then(({ body }) => {
+        expect(body.topic).toEqual(expect.objectContaining(newTopic));
+      });
+  });
+
+  test("should return 400 error if missing required fields", () => {
+    return request(app)
+      .post("/api/topics")
+      .send({ slug: "new-topic" })
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Missing required fields: slug and description");
+      });
+  });
+
+  test("should respond with error if topic already exists", () => {
+    const existingTopic = {
+      slug: "cats",
+      description: "Not dogs",
+    };
+
+    return request(app)
+      .post("/api/topics")
+      .send(existingTopic)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Topic already exists");
+      });
+  });
+});
