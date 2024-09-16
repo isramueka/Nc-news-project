@@ -32,9 +32,10 @@ const getArticles = (req, res, next) => {
 
 const getCommentsByArticle = (req, res, next) => {
   const { article_id } = req.params;
-  fetchCommentsByArticle(article_id)
-    .then((comments) => {
-      res.status(200).send({ comments });
+  const { limit = 10, p = 1 } = req.query;
+  fetchCommentsByArticle(article_id, limit, p)
+    .then(({ comments, total_count }) => {
+      res.status(200).send({ comments, total_count });
     })
     .catch((err) => {
       next(err);

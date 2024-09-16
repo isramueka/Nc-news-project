@@ -68,6 +68,7 @@ const fetchArticles = (
     });
   }
 
+  // Calculate the starting point
   const offset = (p - 1) * limit;
 
   return fetchValidTopics().then((validTopics) => {
@@ -109,7 +110,9 @@ const fetchArticles = (
   });
 };
 
-const fetchCommentsByArticle = (article_id) => {
+const fetchCommentsByArticle = (article_id, limit, p) => {
+  const offset = (p - 1) * limit;
+
   return db
     .query(`SELECT * FROM articles WHERE article_id = $1`, [article_id])
     .then(({ rows }) => {
@@ -119,16 +122,29 @@ const fetchCommentsByArticle = (article_id) => {
           msg: "No comments found for this article",
         });
       }
-      return db.query(
+
+      // Get the total count of comments
+      const totalCountQuery = db.query(
+        `SELECT COUNT(*)::int AS total_count FROM comments WHERE article_id = $1`,
+        [article_id]
+      );
+
+      // Get the comments with pagination
+      const commentsQuery = db.query(
         `SELECT comment_id, votes, created_at, author, body, article_id
         FROM comments
         WHERE article_id = $1
-        ORDER BY created_at DESC`,
-        [article_id]
+        ORDER BY created_at DESC
+        LIMIT $2 OFFSET $3`,
+        [article_id, limit, offset]
       );
+
+      return Promise.all([totalCountQuery, commentsQuery]);
     })
-    .then(({ rows }) => {
-      return rows;
+    .then(([totalCountResult, commentsResult]) => {
+      const total_count = totalCountResult.rows[0].total_count;
+      const comments = commentsResult.rows;
+      return { comments, total_count };
     });
 };
 

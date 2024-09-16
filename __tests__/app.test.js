@@ -120,8 +120,7 @@ describe("/api/articles/:article_id/comments", () => {
       .then((response) => {
         const comments = response.body.comments;
         expect(Array.isArray(comments)).toBe(true);
-        // Expecting length of Comments for article with id = 1
-        expect(comments).toHaveLength(11);
+        expect(comments).toHaveLength(10);
         comments.forEach((comment) => {
           expect(comment).toMatchObject({
             comment_id: expect.any(Number),
@@ -572,5 +571,99 @@ describe("GET /api/articles", () => {
       .then(({ body }) => {
         expect(body.msg).toBe("Invalid topic value");
       });
+  });
+});
+
+describe("GET /api/articles/:article_id/comments", () => {
+  test("200: responds with comments with default pagination", () => {
+    return request(app)
+      .get("/api/articles/1/comments")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comments).toHaveLength(10);
+        expect(body.total_count).toBeGreaterThan(10); // Assuming there are more than 10 comments
+      });
+  });
+
+  test("200: accepts limit query to return limited number of comments", () => {
+    return request(app)
+      .get("/api/articles/1/comments?limit=5")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comments).toHaveLength(5);
+        expect(body.total_count).toBeGreaterThan(5);
+      });
+  });
+
+  test("200: accepts p query to paginate the results", () => {
+    return request(app)
+      .get("/api/articles/1/comments?limit=5&p=2")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comments).toHaveLength(5);
+      });
+  });
+
+  describe("/api/articles/:article_id/comments", () => {
+    test("GET: 200 - responds with an array of comments for the given article_id, sorted by date descending", () => {
+      return request(app)
+        .get("/api/articles/1/comments")
+        .expect(200)
+        .then(({ body }) => {
+          const { comments, total_count } = body;
+          expect(Array.isArray(comments)).toBe(true);
+          expect(comments).toHaveLength(10);
+          expect(total_count).toBeGreaterThan(10);
+          comments.forEach((comment) => {
+            expect(comment).toMatchObject({
+              comment_id: expect.any(Number),
+              votes: expect.any(Number),
+              created_at: expect.any(String),
+              author: expect.any(String),
+              body: expect.any(String),
+              article_id: 1,
+            });
+          });
+        });
+    });
+
+    test("GET: 200 - responds with paginated comments for page 2", () => {
+      return request(app)
+        .get("/api/articles/1/comments?limit=5&p=2")
+        .expect(200)
+        .then(({ body }) => {
+          const { comments, total_count } = body;
+          expect(comments).toHaveLength(5);
+          expect(total_count).toBeGreaterThan(5);
+          comments.forEach((comment) => {
+            expect(comment).toMatchObject({
+              comment_id: expect.any(Number),
+              votes: expect.any(Number),
+              created_at: expect.any(String),
+              author: expect.any(String),
+              body: expect.any(String),
+              article_id: 1,
+            });
+          });
+        });
+    });
+
+    test("GET: 400 - responds with error when invalid limit is passed", () => {
+      return request(app)
+        .get("/api/articles/1/comments?limit=invalid")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Invalid input");
+        });
+    });
+
+    test("GET: 400 - responds with error when invalid page is passed", () => {
+      return request(app)
+        .get("/api/articles/1/comments?p=invalid")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Invalid input");
+        });
+    });
   });
 });
