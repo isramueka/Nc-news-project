@@ -1,4 +1,4 @@
-const { fetchTopics } = require("../models/topics.models");
+const { fetchTopics, insertTopic } = require("../models/topics.models");
 
 const getTopics = (req, res, next) => {
   fetchTopics()
@@ -8,4 +8,14 @@ const getTopics = (req, res, next) => {
     .catch(next);
 };
 
-module.exports = { getTopics };
+const postTopic = (req, res, next) => {
+  const { slug, description } = req.body;
+
+  insertTopic(slug, description)
+    .then((topic) => {
+      res.status(201).send({ topic });
+    })
+    .catch(next);
+};
+
+module.exports = { getTopics, postTopic };

@@ -24,6 +24,8 @@ app.use((err, req, res, next) => {
     return res.status(400).send({ msg: "Invalid input" });
   } else if (err.code === "23502") {
     return res.status(400).send({ msg: "Missing required field" });
+  } else if (err.code === "23505") {
+    return res.status(400).send({ msg: "Topic already exists" });
   }
   next(err);
 });
