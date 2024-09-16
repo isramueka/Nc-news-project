@@ -459,7 +459,6 @@ describe("PATCH /api/comments/:comment_id", () => {
       .expect(200)
       .then((response) => {
         const comment = response.body.comment;
-        console.log(comment);
         expect(comment).toEqual({
           comment_id: 1,
           votes: 17,
@@ -539,6 +538,39 @@ describe("POST /api/articles", () => {
         expect(body.msg).toBe(
           "Missing required fields: author, title, body, topic and article_img_url"
         );
+      });
+  });
+});
+
+describe("GET /api/articles", () => {
+  test("200: should return paginated articles and total count", () => {
+    return request(app)
+      .get("/api/articles?limit=5&p=2")
+      .expect(200)
+      .then(({ body }) => {
+        const { articles, total_count } = body;
+        expect(Array.isArray(articles)).toBe(true);
+        expect(articles.length).toBeLessThanOrEqual(5);
+        expect(typeof total_count).toBe("number");
+        expect(total_count).toBeGreaterThanOrEqual(0);
+      });
+  });
+
+  test("400: should handle invalid limit and page parameters", () => {
+    return request(app)
+      .get("/api/articles?limit=notANumber&p=1")
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Invalid limit value");
+      });
+  });
+
+  test("404: should handle invalid topic value", () => {
+    return request(app)
+      .get("/api/articles?topic=invalidTopic")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Invalid topic value");
       });
   });
 });

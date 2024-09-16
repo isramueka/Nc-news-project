@@ -24,7 +24,13 @@ const fetchArticleById = (article_id) => {
     });
 };
 
-const fetchArticles = (sort_by = "created_at", order = "desc", topic) => {
+const fetchArticles = (
+  sort_by = "created_at",
+  order = "desc",
+  topic,
+  limit = 10,
+  p = 1
+) => {
   const validSortColumns = [
     "title",
     "author",
@@ -48,6 +54,22 @@ const fetchArticles = (sort_by = "created_at", order = "desc", topic) => {
       msg: "Invalid order value",
     });
   }
+  // Validate limit and page
+  if (isNaN(limit) || limit <= 0) {
+    return Promise.reject({
+      status: 400,
+      msg: "Invalid limit value",
+    });
+  }
+  if (isNaN(p) || p <= 0) {
+    return Promise.reject({
+      status: 400,
+      msg: "Invalid page value",
+    });
+  }
+
+  const offset = (p - 1) * limit;
+
   return fetchValidTopics().then((validTopics) => {
     if (topic && !validTopics.includes(topic)) {
       return Promise.reject({ status: 404, msg: "Invalid topic value" });
@@ -68,10 +90,21 @@ const fetchArticles = (sort_by = "created_at", order = "desc", topic) => {
       queryParams.push(topic);
     }
 
-    queryStr += ` GROUP BY articles.article_id ORDER BY ${sort_by} ${order}`;
+    queryStr += ` GROUP BY articles.article_id ORDER BY ${sort_by} ${order} LIMIT $${
+      queryParams.length + 1
+    } OFFSET $${queryParams.length + 2}`;
+
+    queryParams.push(limit, offset);
 
     return db.query(queryStr, queryParams).then(({ rows }) => {
-      return rows;
+      return db
+        .query(
+          "SELECT COUNT(*) FROM articles" + (topic ? " WHERE topic = $1" : ""),
+          topic ? [topic] : []
+        )
+        .then(({ rows: [{ count }] }) => {
+          return { articles: rows, total_count: parseInt(count, 10) };
+        });
     });
   });
 };
