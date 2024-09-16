@@ -450,3 +450,44 @@ describe("GET /api/users/:username", () => {
       });
   });
 });
+
+describe("PATCH /api/comments/:comment_id", () => {
+  test("200: responds with the updated comment when valid input is provided", () => {
+    return request(app)
+      .patch("/api/comments/1")
+      .send({ inc_votes: 1 })
+      .expect(200)
+      .then((response) => {
+        const comment = response.body.comment;
+        console.log(comment);
+        expect(comment).toEqual({
+          comment_id: 1,
+          votes: 17,
+          created_at: "2020-04-06T12:17:00.000Z",
+          author: "butter_bridge",
+          body: "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+          article_id: 9,
+        });
+      });
+  });
+
+  test("400: responds with an error for invalid input", () => {
+    return request(app)
+      .patch("/api/comments/1")
+      .send({ inc_votes: "not-a-number" })
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe("Invalid input for votes");
+      });
+  });
+
+  test("404: responds with an error when the comment does not exist", () => {
+    return request(app)
+      .patch("/api/comments/9999")
+      .send({ inc_votes: 1 })
+      .expect(404)
+      .then((response) => {
+        expect(response.body.msg).toBe("Comment Not Found");
+      });
+  });
+});
