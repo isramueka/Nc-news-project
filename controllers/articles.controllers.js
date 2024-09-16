@@ -4,6 +4,7 @@ const {
   fetchCommentsByArticle,
   postComment,
   updateVotesForArticle,
+  insertArticle,
 } = require("../models/articles.models");
 
 const getArticleById = (req, res, next) => {
@@ -63,10 +64,23 @@ const patchVotesForArticle = (req, res, next) => {
     });
 };
 
+const postArticle = (req, res, next) => {
+  const { author, title, body, topic, article_img_url } = req.body;
+
+  insertArticle(author, title, body, topic, article_img_url)
+    .then((newArticle) => {
+      res.status(201).send({ article: newArticle });
+    })
+    .catch((err) => {
+      next(err);
+    });
+};
+
 module.exports = {
   getArticleById,
   getArticles,
   getCommentsByArticle,
   postCommentForArticle,
   patchVotesForArticle,
+  postArticle,
 };

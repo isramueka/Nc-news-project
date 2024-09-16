@@ -100,7 +100,6 @@ const fetchCommentsByArticle = (article_id) => {
 };
 
 const postComment = (article_id, username, body) => {
-  // Validate input in the model as requested in (PR#6)
   if (!username || !body) {
     return Promise.reject({
       status: 400,
@@ -124,7 +123,6 @@ const postComment = (article_id, username, body) => {
     })
     .then(({ rows }) => {
       if (rows.length === 0) {
-        // Article not found
         return Promise.reject({
           status: 404,
           msg: `Article not found for id: ${article_id}`,
@@ -163,10 +161,52 @@ const updateVotesForArticle = (article_id, upd_votes) => {
     });
 };
 
+const insertArticle = (author, title, body, topic, article_img_url) => {
+  if (!author || !title || !body || !topic) {
+    return Promise.reject({
+      status: 400,
+      msg: "Missing required fields: author, title, body, topic and article_img_url",
+    });
+  }
+
+  // Check if author exists
+  return db
+    .query(`SELECT * FROM users WHERE username = $1`, [author])
+    .then(({ rows }) => {
+      if (rows.length === 0) {
+        return Promise.reject({
+          status: 404,
+          msg: "Author not found",
+        });
+      }
+      // Check if topic exists
+      return db.query(`SELECT * FROM topics WHERE slug = $1`, [topic]);
+    })
+    .then(({ rows }) => {
+      if (rows.length === 0) {
+        return Promise.reject({
+          status: 404,
+          msg: "Topic not found",
+        });
+      }
+      // Insert the article if validation passes
+      return db.query(
+        `INSERT INTO articles (author, title, body, topic, article_img_url, created_at)
+         VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+         RETURNING *, 0 AS comment_count`,
+        [author, title, body, topic, article_img_url]
+      );
+    })
+    .then(({ rows }) => {
+      return rows[0];
+    });
+};
+
 module.exports = {
   fetchArticleById,
   fetchArticles,
   fetchCommentsByArticle,
   postComment,
   updateVotesForArticle,
+  insertArticle,
 };
