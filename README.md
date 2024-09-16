@@ -13,34 +13,21 @@ To run this project locally, follow these steps:
 
 ### 1. **Clone the Repository**
 
-Clone the repository to your local machine. Replace `YOUR_USERNAME` with your GitHub username:
+Clone the repository to your local machine. Replace `your-repository-name` with your GitHub repository name:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/your-repository-name.git
+git clone https://github.com/isramueka/your-repository-name.git
 ```
 
-### 2. **Create new repository on Git and set a remote branch**
+### 2. **Create the env. Files**
 
-Get a remote branch. Replace `YOUR_NEW_REPO_URL_HERE` with the URL of your new repo in Git.
+Create `.env.development` and `.env.test` files in the root directory of your project. For the specific database names, please refer to the `db/setup.sql` file in the repository.
 
-```bash
-cd path to the clone project
-git init
-git remote add origin YOUR_NEW_REPO_URL_HERE
-```
-
-### 3. **Create the env. Files**
-
-Create `.env.development` and `.env.test` files in the root directory of your project with the following content:
-
-PGDATABASE=nc_news
-PGDATABASE=nc_news_test
-
-### 4. **Modify .gitignore file**
+### 3. **Modify .gitignore file**
 
 Add `.env.*` to the .gitignore file to prevent them from being tracked by Git.
 
-### 5. **Install Dependencies & Create Database**
+### 4. **Install Dependencies & Create Database**
 
 Install npm dependencies:
 
@@ -54,7 +41,7 @@ Create the database:
 psql -f db/setup.sql
 ```
 
-### 6. **Check .Pgpass file & Permissions**
+### 5. **Check .Pgpass file & Permissions**
 
 Add the following to your .pgpass file for the connection with both databases:
 
@@ -66,7 +53,7 @@ Ensure permissions with:
 chmod 600 ~/.pgpass
 ```
 
-### 7. **Seed the Database**
+### 6. **Seed the Database**
 
 Run the seed with:
 
@@ -74,7 +61,7 @@ Run the seed with:
 npm run seed
 ```
 
-### 8. **Run Tests**
+### 7. **Run Tests**
 
 To run tests, use the following command:
 
@@ -82,7 +69,7 @@ To run tests, use the following command:
 npm test
 ```
 
-### 9. \*\*Minimum Version Requirements
+### 8. **Minimum Version Requirements**
 
 Ensure that you have the following versions installed:
 
