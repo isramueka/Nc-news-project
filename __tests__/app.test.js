@@ -708,3 +708,43 @@ describe("POST /api/topics", () => {
       });
   });
 });
+
+describe("DELETE /api/articles/:article_id", () => {
+  test("should delete an article and its comments and respond with status 204", async () => {
+    let articleId;
+    const postResponse = await request(app)
+      .post("/api/articles")
+      .send({
+        author: "butter_bridge",
+        title: "Test Article",
+        body: "This is a test article.",
+        topic: "mitch",
+        article_img_url: "https://testimage.com/image.jpg",
+      })
+      .expect(201);
+
+    articleId = postResponse.body.article.article_id;
+
+    // Add a comment
+    await request(app)
+      .post(`/api/articles/${articleId}/comments`)
+      .send({ username: "butter_bridge", body: "Test comment" })
+      .expect(201);
+
+    // Delete article
+    await request(app).delete(`/api/articles/${articleId}`).expect(204);
+
+    await request(app).get(`/api/articles/${articleId}`).expect(404);
+
+    // Ensure the comments associated are deleted
+    await request(app).get(`/api/articles/${articleId}/comments`).expect(404);
+  });
+
+  test("should respond with 204 for a non-existent article_id", async () => {
+    await request(app).delete("/api/articles/999999").expect(204);
+  });
+
+  test("should respond with 400 for an invalid article_id", async () => {
+    await request(app).delete("/api/articles/invalid_id").expect(400);
+  });
+});

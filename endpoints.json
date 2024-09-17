@@ -170,5 +170,12 @@
         "article_id": 1
       }
     }
+  },
+  "DELETE /api/articles/:article_id": {
+    "description": "deletes an article and all associated comments by its id",
+    "exampleResponse": {
+      "status": 204,
+      "message": "No Content"
+    }
   }
 }
