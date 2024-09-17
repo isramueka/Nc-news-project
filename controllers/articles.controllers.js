@@ -5,6 +5,8 @@ const {
   postComment,
   updateVotesForArticle,
   insertArticle,
+  removeArticle,
+  removeCommentsByArticleId,
 } = require("../models/articles.models");
 
 const getArticleById = (req, res, next) => {
@@ -20,7 +22,6 @@ const getArticleById = (req, res, next) => {
 
 const getArticles = (req, res, next) => {
   const { sort_by, order, topic, limit = 10, p = 1 } = req.query;
-
   fetchArticles(sort_by, order, topic, limit, p)
     .then(({ articles, total_count }) => {
       res.status(200).send({ articles, total_count });
@@ -68,7 +69,6 @@ const patchVotesForArticle = (req, res, next) => {
 
 const postArticle = (req, res, next) => {
   const { author, title, body, topic, article_img_url } = req.body;
-
   insertArticle(author, title, body, topic, article_img_url)
     .then((newArticle) => {
       res.status(201).send({ article: newArticle });
@@ -78,6 +78,16 @@ const postArticle = (req, res, next) => {
     });
 };
 
+const deleteArticle = (req, res, next) => {
+  const { article_id } = req.params;
+  removeCommentsByArticleId(article_id)
+    .then(() => removeArticle(article_id))
+    .then(() => {
+      res.status(204).send();
+    })
+    .catch(next);
+};
+
 module.exports = {
   getArticleById,
   getArticles,
@@ -85,4 +95,5 @@ module.exports = {
   postCommentForArticle,
   patchVotesForArticle,
   postArticle,
+  deleteArticle,
 };

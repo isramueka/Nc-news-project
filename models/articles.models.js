@@ -177,7 +177,6 @@ const postComment = (article_id, username, body) => {
           msg: `Article not found for id: ${article_id}`,
         });
       }
-      // Insert the comment if both passed
       return db.query(
         `INSERT INTO comments (article_id, author, body, created_at)
        VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
@@ -217,7 +216,6 @@ const insertArticle = (author, title, body, topic, article_img_url) => {
       msg: "Missing required fields: author, title, body, topic and article_img_url",
     });
   }
-
   // Check if author exists
   return db
     .query(`SELECT * FROM users WHERE username = $1`, [author])
@@ -251,6 +249,14 @@ const insertArticle = (author, title, body, topic, article_img_url) => {
     });
 };
 
+const removeArticle = (article_id) => {
+  return db.query("DELETE FROM articles WHERE article_id = $1;", [article_id]);
+};
+
+const removeCommentsByArticleId = (article_id) => {
+  return db.query("DELETE FROM comments WHERE article_id = $1;", [article_id]);
+};
+
 module.exports = {
   fetchArticleById,
   fetchArticles,
@@ -258,4 +264,6 @@ module.exports = {
   postComment,
   updateVotesForArticle,
   insertArticle,
+  removeArticle,
+  removeCommentsByArticleId,
 };
